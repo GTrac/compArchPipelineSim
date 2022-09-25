@@ -11,7 +11,8 @@ typedef enum{
     store,
     addi,
     bne,
-    stall
+    stall,
+    halt
 } instruction_t;
 
 #endif

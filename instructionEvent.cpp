@@ -4,13 +4,13 @@
 #include "enums.h"
 
 
-instruction_event::instruction_event(instruction_t instruction,signed char instruction_registers[3])
+instruction_event::instruction_event(instruction_t instruction,signed int registers[3])
 {
     this->stage = none;
     this->instruction = instruction;
-    this->instruction_registers[0] = instruction_registers[0];
-    this->instruction_registers[1] = instruction_registers[1];
-    this->instruction_registers[2] = instruction_registers[2];
+    this->registers[0] = registers[0];
+    this->registers[1] = registers[1];
+    this->registers[2] = registers[2];
 }
 
 void instruction_event::next_stage()
@@ -50,4 +50,20 @@ instruction_t instruction_event::get_instruction()
 }
 
         
+signed int instruction_event::get_registers(int i)
+{
+    return this->registers[i];
+}
 
+void instruction_event::print_instruction()
+{
+    if(this->instruction == stall | this->instruction == halt){
+        std::cout << "(" << this->instruction << ")";
+    }else{
+        std::cout << "(" << this->instruction << " ";
+        std::cout << this->registers[0] << " ";
+        std::cout << this->registers[1] << " ";
+        std::cout << this->registers[2] << ")";
+    }
+     
+}
