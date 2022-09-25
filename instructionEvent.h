@@ -1,22 +1,23 @@
 #ifndef INSTRUCTIONS_H_
 #define INSTRUCTIONS_H_
 
-#include "enums.h"
+#include <string>
+
 
 class instruction_event{
     private:
-        stage_t stage;
-        instruction_t instruction;
+        std::string stage;
+        std::string instruction;
         signed int registers[3];
 
     public:
-        instruction_event(instruction_t instruction, signed int registers[3]);
+        instruction_event(std::string instruction, signed int registers[3]);
 
         void next_stage();
 
-        stage_t get_stage();
+        std::string get_stage();
 
-        instruction_t get_instruction();  
+        std::string get_instruction();  
 
         signed int get_registers(int i);
 

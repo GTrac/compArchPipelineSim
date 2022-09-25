@@ -1,10 +1,9 @@
 #include <iostream>
 #include <string>
 #include "instructionEvent.h"
-#include "enums.h"
 
 
-instruction_event::instruction_event(instruction_t instruction,signed int registers[3])
+instruction_event::instruction_event(std::string instruction,signed int registers[3])
 {
     this->stage = none;
     this->instruction = instruction;
@@ -18,33 +17,33 @@ void instruction_event::next_stage()
     switch ( this->stage )
     {
         case none:
-            this->stage = fetch;
+            this->stage = "fetch";
             break;
         case fetch:
-            this->stage = decode;
+            this->stage = "decode";
             break;
         case decode:
-            this->stage = execute;
+            this->stage = "execute";
             break;
         case execute:
-            this->stage = memory;
+            this->stage = "memory";
             break;
         case memory:
-            this->stage = write;
+            this->stage = "write";
             break;
         default:
-            this->stage = none;
+            this->stage = "none";
             std::cout << "ERROR: NON VALID STAGE" << std::endl;
             break;
     }
 }
 
-stage_t instruction_event::get_stage()
+std::string instruction_event::get_stage()
 {
     return this->stage;
 }
 
-instruction_t instruction_event::get_instruction()
+std::string instruction_event::get_instruction()
 {
     return this->instruction;
 }
@@ -57,7 +56,7 @@ signed int instruction_event::get_registers(int i)
 
 void instruction_event::print_instruction()
 {
-    if(this->instruction == stall | this->instruction == halt){
+    if(this->instruction == "stall" | this->instruction == "halt"){
         std::cout << "(" << this->instruction << ")";
     }else{
         std::cout << "(" << this->instruction << " ";

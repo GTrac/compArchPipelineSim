@@ -5,13 +5,12 @@
 #include <vector>
 #include <string>
 #include <list>
-#include "enums.h"
 #include "instructionEvent.h"
 
 using namespace std;
 
 int main(){
-    long int clock_cycle = 0;
+    long int clock_cycle = 1;
     float f[32];
     float mem[21] = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0};
     int x[3] = {0, 20, 0};
@@ -20,7 +19,7 @@ int main(){
     float execute_output;
     signed int use_registers[3];
 
-    bool stall_flag = false, falt_flag = false;
+    bool stall_flag = false, halt_flag = false;
     
 
     
@@ -33,14 +32,15 @@ int main(){
     signed int null_reg[3]= {0,0,0};
 
     //create instruction list
-    instruction_event instruction_list[] = {instruction_event(load, instruction_1), instruction_event(add, instruction_2), instruction_event(store, instruction_3), instruction_event(addi, instruction_4), instruction_event(bne, instruction_5)};
+    instruction_event instruction_list[] = {instruction_event("load", instruction_1), instruction_event("add", instruction_2), instruction_event("store", instruction_3), instruction_event("addi", instruction_4), instruction_event("bne", instruction_5)};
     instruction_event *instruction_from_list, *instruction, *new_instruction;
-    instruction_event *stall_instruction = new instruction_event(stall, null_reg);
-    instruction_event *halt_instruction = new instruction_event(halt, null_reg);
+    instruction_event *stall_instruction = new instruction_event("stall", null_reg);
+    instruction_event *halt_instruction = new instruction_event("halt", null_reg);
     instruction_from_list = &instruction_list[0];
     //queue for pipeline stages
     deque<instruction_event*> pipeline;
-    unsigned int i = 0;
+    instruction_from_list->print_instruction();
+    unsigned int i = 1;
     while( i < sizeof(instruction_list) ){// fetch>decode>execute>memory>write
         cout << "clock Cycle: " << clock_cycle;
         for(int j = 0; j < pipeline.size(); j++){ //cycles through all stages
@@ -52,19 +52,24 @@ int main(){
             use_registers[2] = instruction->get_registers(2);
             cout << "  " << instruction->get_stage();
             
-            switch(instruction->get_stage()){
+            
+            
+            instruction->get_stage()){
                 
-                case write:
+                case "write":
                     instruction->print_instruction();
                     f[use_registers[0]] = execute_output;
                     pipeline.pop_front();
                     break;
 
-                case memory:
+                case "memory":
                     instruction->print_instruction();
-                    if(instruction->get_instruction() == load){
+                    if(instruction->get_instruction() == "load")
+                    {
                         f[use_registers[0]] =  mem[x[use_registers[1]]];
-                    } else if( instruction->get_instruction() == store){
+                    }
+                    else if( instruction->get_instruction() == "store")
+                    {
                          mem[x[use_registers[1]]] = f[use_registers[0]];
                     }
                     instruction->next_stage();
@@ -72,28 +77,42 @@ int main(){
                     pipeline.pop_front();
                     break;
 
-                case execute:
+                case "execute":
                     instruction->print_instruction();
-                    if(instruction->get_instruction() == add){
+                    if(instruction->get_instruction() == "add")
+                    {
                         execute_output = f[use_registers[1]] + f[use_registers[2]];
-                    }else if(instruction->get_instruction() == addi){
+                    }
+
+                    else if(instruction->get_instruction() == "addi")
+                    {
                         execute_output = x[use_registers[1]] + use_registers[2];
                     }
+
+                    else if(instruction->get_instruction() == "halt")//if halt
+                    {
+                        return 0;
+                    }
+
                     instruction->next_stage();
                     pipeline.push_back(instruction);
                     pipeline.pop_front();
                     break;
 
-                case decode:
+                case "decode":
                     instruction->print_instruction();
+                    //if(instruction->)
+                    
+
                     break;
 
-                case fetch:
-                    if(!stall_flag & !halt_flag)//fetch new instruction
+                case "fetch"://fetch new instruction
+                    if(!stall_flag & !halt_flag)
                     {
-                        instruction->next_stage();
-                        pipeline.push_back(instruction);
-                        pipeline.pop_front();
+                        instruction->print_instruction(); //prints instruction
+                        instruction->next_stage(); //moves it to decode
+                        pipeline.push_back(instruction); //adds copy to back to bottom of queue
+                        pipeline.pop_front(); //removes original at top of queue
                         
                         i++;
                         new_instruction = instruction_from_list + i; //grabs next instruction in instruction list
@@ -104,22 +123,30 @@ int main(){
                     {
                         pipeline.push_back(instruction);
                         pipeline.pop_front();
-                        pipeline.push_front(stall);
+                        //pipeline.push_front(stall);
                         pipeline.front()->print_instruction();
                         break;
                     }
-                    if(halt_flag)
-                    {
-                        while(!pipleline.empty()){
-                            pipeline.pop_front();
-                        }
-                        pipeline.push_front(halt_instruction);
+                    // if(halt_flag)
+                    // {
+                    //     if(instruction->get_instruction() != halt)//if instruction isnt halt then flush instructions in
+                    //      queue
+                    //     {
+                    //         while(!pipleline.empty()){
+                    //             pipeline.pop_front();
+                    //         }
+                    //     }
+                        
+                        //pipeline.push_front(halt_instruction);
                         pipeline.front()->print_instruction();
                         break;
-                    }
-            }      
-        }
+            }
+        } 
         clock_cycle++;
         cout << "\n";
+        if(clock_cycle > 50){
+            return 0;
+        }
     }
 }
+
