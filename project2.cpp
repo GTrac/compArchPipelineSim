@@ -34,8 +34,9 @@ int main(){
 
     //create instruction list
     instruction_event instruction_list[] = {instruction_event(load, instruction_1), instruction_event(add, instruction_2), instruction_event(store, instruction_3), instruction_event(addi, instruction_4), instruction_event(bne, instruction_5)};
-    instruction_event *instruction_from_list, *instruction;
+    instruction_event *instruction_from_list, *instruction, *new_instruction;
     instruction_event *stall_instruction = new instruction_event(stall, null_reg);
+    instruction_event *halt_instruction = new instruction_event(halt, null_reg);
     instruction_from_list = &instruction_list[0];
     //queue for pipeline stages
     deque<instruction_event*> pipeline;
@@ -43,17 +44,22 @@ int main(){
     while( i < sizeof(instruction_list) ){// fetch>decode>execute>memory>write
         cout << "clock Cycle: " << clock_cycle;
         for(int j = 0; j < pipeline.size(); j++){ //cycles through all stages
+            
+            //MOVE INSTRUCTIONS IN PIPELINE
             instruction = pipeline.front(); //grabs current instruction
             use_registers[0] = instruction->get_registers(0);
             use_registers[1] = instruction->get_registers(1);
             use_registers[2] = instruction->get_registers(2);
             cout << "  " << instruction->get_stage();
+            
             switch(instruction->get_stage()){
+                
                 case write:
                     instruction->print_instruction();
                     f[use_registers[0]] = execute_output;
                     pipeline.pop_front();
                     break;
+
                 case memory:
                     instruction->print_instruction();
                     if(instruction->get_instruction() == load){
@@ -65,6 +71,7 @@ int main(){
                     pipeline.push_back(instruction);
                     pipeline.pop_front();
                     break;
+
                 case execute:
                     instruction->print_instruction();
                     if(instruction->get_instruction() == add){
@@ -76,19 +83,38 @@ int main(){
                     pipeline.push_back(instruction);
                     pipeline.pop_front();
                     break;
+
                 case decode:
                     instruction->print_instruction();
                     break;
+
                 case fetch:
-                    if(!stall_flag){
-                       i++;
-                       pipeline.push_back(instruction_from_list + i); //FETCH
-                       
-                    }else if(stall_flag){
+                    if(!stall_flag & !halt_flag)//fetch new instruction
+                    {
+                        instruction->next_stage();
+                        pipeline.push_back(instruction);
                         pipeline.pop_front();
+                        
+                        i++;
+                        new_instruction = instruction_from_list + i; //grabs next instruction in instruction list
+                        new_instruction->next_stage(); //sets new instruction to fetch stage
+                        pipeline.push_back(new_instruction); //adds instruction to pipeline queue
+                    }
+                    if(stall_flag)
+                    {
+                        pipeline.push_back(instruction);
+                        pipeline.pop_front();
+                        pipeline.push_front(stall);
+                        pipeline.front()->print_instruction();
                         break;
-                    }else{
-                        pipeline.push_front(stall_instruction);
+                    }
+                    if(halt_flag)
+                    {
+                        while(!pipleline.empty()){
+                            pipeline.pop_front();
+                        }
+                        pipeline.push_front(halt_instruction);
+                        pipeline.front()->print_instruction();
                         break;
                     }
             }      
