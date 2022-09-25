@@ -54,6 +54,7 @@ int main(){
             
             
             
+            
             instruction->get_stage()){
                 
                 case "write":
