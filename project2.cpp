@@ -51,62 +51,58 @@ int main(){
             use_registers[1] = instruction->get_registers(1);
             use_registers[2] = instruction->get_registers(2);
             cout << "  " << instruction->get_stage();
-            
-            
-            
-            
-            instruction->get_stage()){
-                
-                case "write":
-                    instruction->print_instruction();
+             
+            if(instruction->get_stage()=="memory")
+            {
+                instruction->print_instruction();//print stage
+
+                if(instruction->get_instruction() == "load")
+                {
+                    f[use_registers[0]] =  mem[x[use_registers[1]]];
+                }
+                else if( instruction->get_instruction() == "store")
+                {
+                    mem[x[use_registers[1]]] = f[use_registers[0]];
+                }
+                else
+                {
                     f[use_registers[0]] = execute_output;
-                    pipeline.pop_front();
-                    break;
+                }
+                pipeline.pop_front();
+            }
 
-                case "memory":
-                    instruction->print_instruction();
-                    if(instruction->get_instruction() == "load")
-                    {
-                        f[use_registers[0]] =  mem[x[use_registers[1]]];
-                    }
-                    else if( instruction->get_instruction() == "store")
-                    {
-                         mem[x[use_registers[1]]] = f[use_registers[0]];
-                    }
-                    instruction->next_stage();
-                    pipeline.push_back(instruction);
-                    pipeline.pop_front();
-                    break;
 
-                case "execute":
-                    instruction->print_instruction();
-                    if(instruction->get_instruction() == "add")
-                    {
-                        execute_output = f[use_registers[1]] + f[use_registers[2]];
-                    }
 
-                    else if(instruction->get_instruction() == "addi")
-                    {
-                        execute_output = x[use_registers[1]] + use_registers[2];
-                    }
+            else if(instruction->get_stage() == "execute")
+            {
+                instruction->print_instruction(); // 
+                if(instruction->get_instruction() == "add")
+                {
+                    execute_output = f[use_registers[1]] + f[use_registers[2]];
+                }
 
-                    else if(instruction->get_instruction() == "halt")//if halt
-                    {
-                        return 0;
-                    }
+                else if(instruction->get_instruction() == "addi")
+                {
+                    execute_output = x[use_registers[1]] + use_registers[2];
+                }
 
-                    instruction->next_stage();
-                    pipeline.push_back(instruction);
-                    pipeline.pop_front();
-                    break;
+                else if(instruction->get_instruction() == "halt")//if halt
+                {
+                    return 0;
+                }
 
-                case "decode":
-                    instruction->print_instruction();
+                instruction->next_stage();
+                pipeline.push_back(instruction);
+                pipeline.pop_front();
+            }
+            else if(instruction->get_stage() == "decode")
+            {
+                instruction->print_instruction();
                     //if(instruction->)
                     
 
-                    break;
-
+            }
+            else if(instruction->get_stage() == "decode")
                 case "fetch"://fetch new instruction
                     if(!stall_flag & !halt_flag)
                     {
