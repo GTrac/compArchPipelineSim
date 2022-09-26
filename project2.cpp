@@ -25,10 +25,10 @@ int main(){
     
     //instructions to add
     signed int instruction_1[3]= {0,1,0};
-    signed int instruction_2[3]= {0,2,0};
-    signed int instruction_3[3]= {0,3,0};
-    signed int instruction_4[3]= {0,4,0};
-    signed int instruction_5[3]= {0,5,0};
+    signed int instruction_2[3]= {0,1,0};
+    signed int instruction_3[3]= {0,1,0};
+    signed int instruction_4[3]= {0,1,0};
+    signed int instruction_5[3]= {0,1,0};
     signed int null_reg[3]= {0,0,0};
 
     //create instruction list
@@ -39,20 +39,20 @@ int main(){
     instruction_from_list = &instruction_list[0];
     //queue for pipeline stages
     deque<instruction_event*> pipeline;
-    pipeline.push_back(instruction_from_list);
+    instruction_from_list->print_instruction();
     unsigned int i = 1;
-    while( i < sizeof(instruction_list) ){// fetch>decode>execute>write
+    while( i < sizeof(instruction_list) ){// fetch>decode>execute>memory>write
         cout << "clock Cycle: " << clock_cycle;
         for(int j = 0; j < pipeline.size(); j++){ //cycles through all stages
-            //cout << " " << pipeline.size() << " ";
+            
             //MOVE INSTRUCTIONS IN PIPELINE
             instruction = pipeline.front(); //grabs current instruction
             use_registers[0] = instruction->get_registers(0);
             use_registers[1] = instruction->get_registers(1);
             use_registers[2] = instruction->get_registers(2);
-            cout << "  " << instruction->get_stage() << ":";
+            cout << "  " << instruction->get_stage();
              
-            if(instruction->get_stage()=="write")
+            if(instruction->get_stage()=="memory")
             {
                 instruction->print_instruction();//print stage
 
@@ -100,46 +100,45 @@ int main(){
                 instruction->print_instruction();
                     //if(instruction->)
                     
-                instruction->next_stage(); //moves it to execute
-                pipeline.push_back(instruction); //adds copy to back to bottom of queue
-                pipeline.pop_front(); //removes original at top of queue
+
             }
-            else if(instruction->get_stage() == "fetch")
-            {
-                if(!stall_flag & !halt_flag)
-                {
-                    instruction->print_instruction(); //prints instruction
-                    instruction->next_stage(); //moves it to decode
-                    pipeline.push_back(instruction); //adds copy to back to bottom of queue
-                    pipeline.pop_front(); //removes original at top of queue
-                    
-                    i++;
-                    new_instruction = instruction_from_list + i; //grabs next instruction in instruction list
-                    //new_instruction->next_stage(); //sets new instruction to fetch stage
-                    pipeline.push_back(new_instruction); //adds instruction to pipeline queue
-                }
-                if(stall_flag)
-                {
-                    pipeline.push_back(instruction);
-                    pipeline.pop_front();
-                    //pipeline.push_front(stall);
-                    pipeline.front()->print_instruction();
-                    break;
-                }
-                // if(halt_flag)
-                // {
-                //     if(instruction->get_instruction() != halt)//if instruction isnt halt then flush instructions in
-                //      queue
-                //     {
-                //         while(!pipleline.empty()){
-                //             pipeline.pop_front();
-                //         }
-                //     }
-                    
-                    //pipeline.push_front(halt_instruction);
-                    //pipeline.front()->print_instruction();
+            else if(instruction->get_stage() == "decode")
+                case "fetch"://fetch new instruction
+                    if(!stall_flag & !halt_flag)
+                    {
+                        instruction->print_instruction(); //prints instruction
+                        instruction->next_stage(); //moves it to decode
+                        pipeline.push_back(instruction); //adds copy to back to bottom of queue
+                        pipeline.pop_front(); //removes original at top of queue
+                        
+                        i++;
+                        new_instruction = instruction_from_list + i; //grabs next instruction in instruction list
+                        new_instruction->next_stage(); //sets new instruction to fetch stage
+                        pipeline.push_back(new_instruction); //adds instruction to pipeline queue
+                    }
+                    if(stall_flag)
+                    {
+                        pipeline.push_back(instruction);
+                        pipeline.pop_front();
+                        //pipeline.push_front(stall);
+                        pipeline.front()->print_instruction();
+                        break;
+                    }
+                    // if(halt_flag)
+                    // {
+                    //     if(instruction->get_instruction() != halt)//if instruction isnt halt then flush instructions in
+                    //      queue
+                    //     {
+                    //         while(!pipleline.empty()){
+                    //             pipeline.pop_front();
+                    //         }
+                    //     }
+                        
+                        //pipeline.push_front(halt_instruction);
+                        pipeline.front()->print_instruction();
+                        break;
             }
-        }//for 
+        } 
         clock_cycle++;
         cout << "\n";
         if(clock_cycle > 50){

@@ -8,7 +8,7 @@
 using namespace std;
 
 int main(){
-    long int clock_cycle = 1;
+    int clock_cycle = 1;
     float f[32];
     float mem[21] = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0};
     int x[3] = {0, 20, 0};
@@ -17,16 +17,17 @@ int main(){
     float execute_output;
     signed int use_registers[3];
 
-    bool stall_flag = false, halt_flag = false;
+    int stall_flag = 0, stall_clock_flag = 0;
+    bool halt_flag = false;
     
 
     
     //instructions to add
     signed int instruction_1[3]= {0,1,0};
-    signed int instruction_2[3]= {0,2,0};
-    signed int instruction_3[3]= {0,3,0};
-    signed int instruction_4[3]= {0,4,0};
-    signed int instruction_5[3]= {0,5,0};
+    signed int instruction_2[3]= {4,0,2};
+    signed int instruction_3[3]= {4,1,0};
+    signed int instruction_4[3]= {1,1,4};
+    signed int instruction_5[3]= {1,2,0};
     signed int null_reg[3]= {0,0,0};
 
     //create instruction list
@@ -42,7 +43,7 @@ int main(){
     while( i < sizeof(instruction_list) ){// fetch>decode>execute>write
         cout << "clock Cycle: " << clock_cycle;
         pipeline_size = pipeline.size();
-        cout << " size:" << pipeline.size() << " ";
+        //cout << " size:" << pipeline.size() << " ";
         for(int j = 0; j < pipeline_size; j++){ //cycles through all stages
             //cout << " " << pipeline.size() << " ";
             //MOVE INSTRUCTIONS IN PIPELINE
@@ -50,87 +51,111 @@ int main(){
             use_registers[0] = instruction->get_registers(0);
             use_registers[1] = instruction->get_registers(1);
             use_registers[2] = instruction->get_registers(2);
-            cout << "  " << instruction->get_stage() << ":";
              
             if(instruction->get_stage()=="write")
             {
+                cout << "  " << instruction->get_stage() << ":";
                 instruction->print_instruction();//print stage
 
-                // if(instruction->get_instruction() == "load")
-                // {
-                //     f[use_registers[0]] =  mem[x[use_registers[1]]];
-                // }
-                // else if( instruction->get_instruction() == "store")
-                // {
-                //     mem[x[use_registers[1]]] = f[use_registers[0]];
-                // }
-                // else
-                // {
-                //     f[use_registers[0]] = execute_output;
-                // }
+                if(instruction->get_instruction() == "load")
+                {
+                    f[use_registers[0]] =  mem[x[use_registers[1]]];
+                }
+                else if( instruction->get_instruction() == "store")
+                {
+                    mem[x[use_registers[1]]] = f[use_registers[0]];
+                }
+                else
+                {
+                    f[use_registers[0]] = execute_output;
+                }
                 pipeline.erase(instruction);
                 pipeline_size -=1;
+                j--;
+            
             }
 
 
 
             else if(instruction->get_stage() == "execute")
             {
+                cout << "  " << instruction->get_stage() << ":";
                 instruction->print_instruction(); // 
-                // if(instruction->get_instruction() == "add")
-                // {
-                //     execute_output = f[use_registers[1]] + f[use_registers[2]];
-                // }
+                if(instruction->get_instruction() == "add")
+                {
+                    execute_output = f[use_registers[1]] + f[use_registers[2]];
+                }
 
-                // else if(instruction->get_instruction() == "addi")
-                // {
-                //     execute_output = x[use_registers[1]] + use_registers[2];
-                // }
+                else if(instruction->get_instruction() == "addi")
+                {
+                    execute_output = x[use_registers[1]] + use_registers[2];
+                }
 
-                // else if(instruction->get_instruction() == "halt")//if halt
-                // {
-                //     return 0;
-                // }
+                else if(instruction->get_instruction() == "halt")//if halt
+                {
+                    return 0;
+                }
+                else if(instruction->get_instruction() == "bne")
+                {
+                    if(x[use_registers[0]] == x[use_registers[1]]){
+                        pipeline.erase(instruction+1);
+                        pipeline.erase(instruction+2);
+                        pipeline_size -=2;
+                        halt_flag == true;
+
+                    }
+                }
 
                 instruction->next_stage();
             }
             else if(instruction->get_stage() == "decode")
             {
-                instruction->print_instruction();
-                    //if(instruction->)
-                    
-                instruction->next_stage(); //moves it to execute
+                if((instruction-1)->get_stage() == "write")cout << " execute:(stall)";
+                if(!stall_clock_flag)
+                {
+                    cout << "  " << instruction->get_stage() << ":";
+                    instruction->print_instruction();
+                    if(instruction->get_instruction() == "add")
+                    {
+                        stall_flag = 2;
+                    }
+                    if(instruction->get_instruction() == "load")
+                    {
+                        stall_flag = 1;
+                    }
+                    instruction->next_stage();//moves it to execute
+                }else{
+                    cout << "  " << instruction->get_stage() << ":";
+                    instruction->print_instruction();
+                }
+                
             }
             else if(instruction->get_stage() == "fetch")
             {
-                if(!stall_flag & !halt_flag)
+                cout << "  " << instruction->get_stage() << ":";
+                if(!stall_clock_flag & !halt_flag)
                 {
                     instruction->print_instruction(); //prints instruction
                     instruction->next_stage(); //moves it to decode
-                    i++;
+                    i = (i+1)%5;
                     pipeline.push_back(instruction_list[i]); //adds instruction to pipeline queue
                 }
-                if(stall_flag)
+                if(stall_clock_flag)
                 {
-
+                    instruction->print_instruction(); //prints instruction
                 }
-                // if(halt_flag)
-                // {
-                //     if(instruction->get_instruction() != halt)//if instruction isnt halt then flush instructions in
-                //      queue
-                //     {
-                //         while(!pipleline.empty()){
-                //             pipeline.pop_front();
-                //         }
-                //     }
-                    
-                    //pipeline.push_front(halt_instruction);
-                    //pipeline.front()->print_instruction();
+                if(halt_flag){
+                    cout << "(" << "halt" << ")";
+                }
+
             }
-        }//for 
+        }
+        cout << endl;
+        if(stall_clock_flag) stall_clock_flag--;
+        if(stall_flag) stall_clock_flag = stall_flag;
+        stall_flag = 0;
         clock_cycle++;
-        cout << "\n";
-        if(clock_cycle > 50){
+        if(clock_cycle>50){
             return 0;
         }
     }
