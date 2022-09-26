@@ -5,36 +5,30 @@
 
 instruction_event::instruction_event(std::string instruction,signed int registers[3])
 {
-    this->stage = none;
+    this->stage = "fetch";
     this->instruction = instruction;
     this->registers[0] = registers[0];
     this->registers[1] = registers[1];
     this->registers[2] = registers[2];
 }
 
-void instruction_event::next_stage()
+void instruction_event::next_stage()//fetch>decode>execute>write
 {
-    switch ( this->stage )
+    if(this->stage == "fetch")
     {
-        case none:
-            this->stage = "fetch";
-            break;
-        case fetch:
-            this->stage = "decode";
-            break;
-        case decode:
-            this->stage = "execute";
-            break;
-        case execute:
-            this->stage = "memory";
-            break;
-        case memory:
-            this->stage = "write";
-            break;
-        default:
-            this->stage = "none";
-            std::cout << "ERROR: NON VALID STAGE" << std::endl;
-            break;
+        this->stage = "decode";
+    }
+    else if(this->stage == "decode")
+    {
+        this->stage = "execute";
+    }
+    else if(this->stage == "execute")
+    {
+        this->stage = "write";
+    }
+    else if(this->stage == "write")
+    {
+        std::cout << "ERROR NO STAGE AFTER WRITE" << std::endl;
     }
 }
 
