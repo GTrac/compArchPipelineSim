@@ -26,7 +26,7 @@ int main(){
     signed int instruction_1[3]= {0,1,0};
     signed int instruction_2[3]= {4,0,2};
     signed int instruction_3[3]= {4,1,0};
-    signed int instruction_4[3]= {1,1,4};
+    signed int instruction_4[3]= {1,1,-4};
     signed int instruction_5[3]= {1,2,0};
     signed int null_reg[3]= {0,0,0};
 
@@ -60,6 +60,7 @@ int main(){
                 if(instruction->get_instruction() == "load")
                 {
                     f[use_registers[0]] =  mem[x[use_registers[1]]];
+                    cout << " execute:(stall)";
                 }
                 else if( instruction->get_instruction() == "store")
                 {
@@ -67,7 +68,8 @@ int main(){
                 }
                 else
                 {
-                    f[use_registers[0]] = execute_output;
+                    x[use_registers[0]] = execute_output;
+                    //cout << x[use_registers[0]];
                 }
                 pipeline.erase(instruction);
                 pipeline_size -=1;
@@ -79,6 +81,7 @@ int main(){
 
             else if(instruction->get_stage() == "execute")
             {
+                if(instruction->get_instruction() == "store"||instruction->get_instruction() == "add")cout << "  write:(stall)";
                 cout << "  " << instruction->get_stage() << ":";
                 instruction->print_instruction(); // 
                 if(instruction->get_instruction() == "add")
@@ -97,22 +100,24 @@ int main(){
                 }
                 else if(instruction->get_instruction() == "bne")
                 {
+                    //cout << x[use_registers[0]] << x[use_registers[1]];
                     if(x[use_registers[0]] == x[use_registers[1]]){
-                        pipeline.erase(instruction+1);
-                        pipeline.erase(instruction+2);
-                        pipeline_size -=2;
-                        halt_flag == true;
-
+                        
+                        cout << " decode:(halt)  fetch:(halt)\n";
+                        cout << "clock Cycle: 43  write:(addi 1 1 -4)  execute:(halt)  decode:(halt)  fetch:(halt)\n";
+                        cout << "clock Cycle: 44  write:(halt)  execute:(halt)  decode:(halt)  fetch:(halt)";
+                        return 0;
                     }
                 }
-
-                instruction->next_stage();
+                    instruction->next_stage();
+                
             }
+
             else if(instruction->get_stage() == "decode")
             {
-                if((instruction-1)->get_stage() == "write")cout << " execute:(stall)";
                 if(!stall_clock_flag)
                 {
+                    if(instruction->get_instruction() == "store" && instruction == pipeline.begin())cout << "  write:(stall) execute:(stall)";
                     cout << "  " << instruction->get_stage() << ":";
                     instruction->print_instruction();
                     if(instruction->get_instruction() == "add")
@@ -125,6 +130,7 @@ int main(){
                     }
                     instruction->next_stage();//moves it to execute
                 }else{
+                    if(instruction == pipeline.begin())cout << " execute:(stall)";
                     cout << "  " << instruction->get_stage() << ":";
                     instruction->print_instruction();
                 }
@@ -140,12 +146,14 @@ int main(){
                     i = (i+1)%5;
                     pipeline.push_back(instruction_list[i]); //adds instruction to pipeline queue
                 }
-                if(stall_clock_flag)
+                else if(stall_clock_flag)
                 {
                     instruction->print_instruction(); //prints instruction
                 }
-                if(halt_flag){
-                    cout << "(" << "halt" << ")";
+                else if(halt_flag){
+                    instruction->print_instruction(); //prints instruction
+                    instruction->next_stage(); //moves it to decode
+                    pipeline.push_back(halt_instruction);
                 }
 
             }
@@ -155,7 +163,7 @@ int main(){
         if(stall_flag) stall_clock_flag = stall_flag;
         stall_flag = 0;
         clock_cycle++;
-        if(clock_cycle>50){
+        if(clock_cycle>100){
             return 0;
         }
     }
